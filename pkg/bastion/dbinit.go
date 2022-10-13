@@ -535,6 +535,114 @@ func DBInit(db *gorm.DB) error {
 				return tx.AutoMigrate(&ACL{})
 			},
 			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "33",
+			Migrate: func(tx *gorm.DB) error {
+				type Host struct {
+					gorm.Model
+					Name     string `gorm:"size:255"`
+					Addr     string
+					User     string
+					Password string
+					URL      string
+					SSHKey   *dbmodels.SSHKey      `gorm:"ForeignKey:SSHKeyID"`
+					SSHKeyID uint                  `gorm:"index"`
+					HostKey  []byte                `sql:"size:10000"`
+					Groups   []*dbmodels.HostGroup `gorm:"many2many:host_host_groups;"`
+					Comment  string
+					Logging  string
+					Hop      *dbmodels.Host `gorm:"ForeignKey:HopID"`
+					HopID    uint           `gorm:"default:NULL" valid:"optional"`
+				}
+				return tx.AutoMigrate(&Host{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "34",
+			Migrate: func(tx *gorm.DB) error {
+				type HostGroup struct {
+					gorm.Model
+					Name    string           `valid:"required,length(1|255),unix_user" gorm:"index:uix_hostgroups_name,unique"`
+					Hosts   []*dbmodels.Host `gorm:"many2many:host_host_groups;constraint:OnDelete:CASCADE;"`
+					ACLs    []*dbmodels.ACL  `gorm:"many2many:host_group_acls;constraint:OnDelete:CASCADE;"`
+
+					Comment string           `valid:"optional"`
+				}
+				return tx.AutoMigrate(&HostGroup{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "35",
+			Migrate: func(tx *gorm.DB) error {
+				type UserGroup struct {
+					gorm.Model
+					Name    string           `valid:"required,length(1|255),unix_user" gorm:"index:uix_usergroups_name,unique"`
+					Users   []*dbmodels.User `gorm:"many2many:user_user_groups;constraint:OnDelete:CASCADE;"`
+					ACLs    []*dbmodels.ACL  `gorm:"many2many:user_group_acls;constraint:OnDelete:CASCADE;"`
+					Comment string           `valid:"optional"`
+				}
+				return tx.AutoMigrate(&UserGroup{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "36",
+			Migrate: func(tx *gorm.DB) error {
+				type ACL struct {
+					gorm.Model
+					HostGroups  []*dbmodels.HostGroup `gorm:"many2many:host_group_acls;constraint:OnDelete:CASCADE;"`
+					UserGroups  []*dbmodels.UserGroup `gorm:"many2many:user_group_acls;constraint:OnDelete:CASCADE;"`
+					HostPattern string                `valid:"optional"`
+					Action      string                `valid:"required"`
+					Weight      uint                  ``
+					Comment     string                `valid:"optional"`
+					Inception   *time.Time
+					Expiration  *time.Time
+				}
+				return tx.AutoMigrate(&ACL{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "37",
+			Migrate: func(tx *gorm.DB) error {
+				type User struct {
+					// FIXME: use uuid for ID
+					gorm.Model
+					Roles       []*dbmodels.UserRole  `gorm:"many2many:user_user_roles;constraint:OnDelete:CASCADE;"`
+					Email       string       `valid:"required,email"`
+					Name        string       `valid:"required,length(1|255),unix_user" gorm:"index:uix_users_name,unique"`
+					Keys        []*dbmodels.UserKey   `gorm:"ForeignKey:UserID;constraint:OnDelete:CASCADE;"`
+					Groups      []*dbmodels.UserGroup `gorm:"many2many:user_user_groups;constraint:OnDelete:CASCADE;"`
+					Comment     string       `valid:"optional"`
+					InviteToken string       `valid:"optional,length(10|60)"`
+				}
+				return tx.AutoMigrate(&User{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "38",
+			Migrate: func(tx *gorm.DB) error {
+				type UserRole struct {
+					gorm.Model
+					Name  string  `valid:"required,length(1|255),unix_user"`
+					Users []*dbmodels.User `gorm:"many2many:user_user_roles;constraint:OnDelete:CASCADE;"`
+				}
+				return tx.AutoMigrate(&UserRole{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "39",
+			Migrate: func(tx *gorm.DB) error {
+				type UserKey struct {
+					gorm.Model
+					Key           []byte `sql:"size:1000" valid:"length(1|1000)"`
+					AuthorizedKey string `sql:"size:1000" valid:"required,length(1|1000)"`
+					UserID        uint   ``
+					User          *dbmodels.User  `gorm:"ForeignKey:UserID;constraint:OnDelete:CASCADE;"`
+					Comment       string `valid:"optional"`
+				}
+				return tx.AutoMigrate(&UserKey{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
 		},
 	})
 	if err := m.Migrate(); err != nil {
