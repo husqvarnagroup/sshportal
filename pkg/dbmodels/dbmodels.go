@@ -62,8 +62,8 @@ type Host struct {
 	Groups   []*HostGroup `gorm:"many2many:host_host_groups;"`
 	Comment  string       `valid:"optional"`
 	Logging  string       `valid:"optional,host_logging_mode"`
-	Hop      *Host
-	HopID    uint
+	Hop      *Host        `gorm:"ForeignKey:HopID"`
+	HopID    uint         `gorm:"default:NULL" valid:"optional"`
 }
 
 // UserKey defines a user public key used by sshportal to identify the user
@@ -137,7 +137,7 @@ type Session struct {
 type Event struct {
 	gorm.Model
 	Author   *User                  `gorm:"ForeignKey:AuthorID"`
-	AuthorID uint                   `valid:"optional"`
+	AuthorID uint                   `gorm:"default:NULL" valid:"optional"`
 	Domain   string                 `valid:"required"`
 	Action   string                 `valid:"required"`
 	Entity   string                 `valid:"optional"`

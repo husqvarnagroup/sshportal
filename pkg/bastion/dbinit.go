@@ -535,6 +535,28 @@ func DBInit(db *gorm.DB) error {
 				return tx.AutoMigrate(&ACL{})
 			},
 			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "33",
+			Migrate: func(tx *gorm.DB) error {
+				type Host struct {
+					gorm.Model
+					Name     string `gorm:"size:255"`
+					Addr     string
+					User     string
+					Password string
+					URL      string
+					SSHKey   *dbmodels.SSHKey      `gorm:"ForeignKey:SSHKeyID"`
+					SSHKeyID uint                  `gorm:"index"`
+					HostKey  []byte                `sql:"size:10000"`
+					Groups   []*dbmodels.HostGroup `gorm:"many2many:host_host_groups;"`
+					Comment  string
+					Logging  string
+					Hop      *dbmodels.Host `gorm:"ForeignKey:HopID"`
+					HopID    uint           `gorm:"default:NULL" valid:"optional"`
+				}
+				return tx.AutoMigrate(&Host{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
 		},
 	})
 	if err := m.Migrate(); err != nil {
