@@ -97,23 +97,23 @@ type User struct {
 type UserGroup struct {
 	gorm.Model
 	Name    string  `valid:"required,length(1|255),unix_user" gorm:"index:uix_usergroups_name,unique"`
-	Users   []*User `gorm:"many2many:user_user_groups;"`
-	ACLs    []*ACL  `gorm:"many2many:user_group_acls;"`
+	Users   []*User `gorm:"many2many:user_user_groups;constraint:OnDelete:SET NULL;"`
+	ACLs    []*ACL  `gorm:"many2many:user_group_acls;constraint:OnDelete:SET NULL;"`
 	Comment string  `valid:"optional"`
 }
 
 type HostGroup struct {
 	gorm.Model
 	Name    string  `valid:"required,length(1|255),unix_user" gorm:"index:uix_hostgroups_name,unique"`
-	Hosts   []*Host `gorm:"many2many:host_host_groups;"`
-	ACLs    []*ACL  `gorm:"many2many:host_group_acls;"`
+	Hosts   []*Host `gorm:"many2many:host_host_groups;constraint:OnDelete:SET NULL;"`
+	ACLs    []*ACL  `gorm:"many2many:host_group_acls;constraint:OnDelete:SET NULL;"`
 	Comment string  `valid:"optional"`
 }
 
 type ACL struct {
 	gorm.Model
-	HostGroups  []*HostGroup `gorm:"many2many:host_group_acls;"`
-	UserGroups  []*UserGroup `gorm:"many2many:user_group_acls;"`
+	HostGroups  []*HostGroup `gorm:"many2many:host_group_acls;constraint:OnDelete:SET NULL;"`
+	UserGroups  []*UserGroup `gorm:"many2many:user_group_acls;constraint:OnDelete:SET NULL;"`
 	HostPattern string       `valid:"optional"`
 	Action      string       `valid:"required"`
 	Weight      uint         ``

@@ -557,6 +557,49 @@ func DBInit(db *gorm.DB) error {
 				return tx.AutoMigrate(&Host{})
 			},
 			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "34",
+			Migrate: func(tx *gorm.DB) error {
+				type HostGroup struct {
+					gorm.Model
+					Name    string           `valid:"required,length(1|255),unix_user" gorm:"index:uix_hostgroups_name,unique"`
+					Hosts   []*dbmodels.Host `gorm:"many2many:host_host_groups;constraint:OnDelete:SET NULL;"`
+					ACLs    []*dbmodels.ACL  `gorm:"many2many:host_group_acls;constraint:OnDelete:SET NULL;"`
+					Comment string           `valid:"optional"`
+				}
+				return tx.AutoMigrate(&HostGroup{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "35",
+			Migrate: func(tx *gorm.DB) error {
+				type UserGroup struct {
+					gorm.Model
+					Name    string           `valid:"required,length(1|255),unix_user" gorm:"index:uix_usergroups_name,unique"`
+					Users   []*dbmodels.User `gorm:"many2many:user_user_groups;constraint:OnDelete:SET NULL;"`
+					ACLs    []*dbmodels.ACL  `gorm:"many2many:user_group_acls;constraint:OnDelete:SET NULL;"`
+					Comment string           `valid:"optional"`
+				}
+				return tx.AutoMigrate(&UserGroup{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
+		}, {
+			ID: "36",
+			Migrate: func(tx *gorm.DB) error {
+				type ACL struct {
+					gorm.Model
+					HostGroups  []*dbmodels.HostGroup `gorm:"many2many:host_group_acls;constraint:OnDelete:SET NULL;"`
+					UserGroups  []*dbmodels.UserGroup `gorm:"many2many:user_group_acls;constraint:OnDelete:SET NULL;"`
+					HostPattern string                `valid:"optional"`
+					Action      string                `valid:"required"`
+					Weight      uint                  ``
+					Comment     string                `valid:"optional"`
+					Inception   *time.Time
+					Expiration  *time.Time
+				}
+				return tx.AutoMigrate(&ACL{})
+			},
+			Rollback: func(tx *gorm.DB) error { return fmt.Errorf("not implemented") },
 		},
 	})
 	if err := m.Migrate(); err != nil {
